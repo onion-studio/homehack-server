@@ -1,32 +1,40 @@
-const { makeExecutableSchema } = require('apollo-server');
-
-const { gql } = require('apollo-server');
+const { gql, makeExecutableSchema } = require('apollo-server');
+const Cycle = require('./models/Cycle');
 
 const typeDefs = gql`
-  type Book {
-    title: String
-    author: String
+  type Cycle {
+    title: String!
+    interval: Int!
+  }
+
+  input CycleInput {
+    title: String!
+    interval: Int!
   }
 
   type Query {
-    books: [Book]
+    cycles: [Cycle!]!
+  }
+
+  type Mutation {
+    createCycle(input: CycleInput): Cycle
   }
 `;
 
-const books = [
-  {
-    title: 'Harry Potter and the Chamber of Secrets',
-    author: 'J.K. Rowling',
-  },
-  {
-    title: 'Jurassic Park',
-    author: 'Michael Crichton',
-  },
-];
-
 const resolvers = {
   Query: {
-    books: () => books,
+    async cycles(parent, args, context, info) {
+      return Cycle.find();
+    },
+  },
+  Mutation: {
+    async createCycle(parent, args, context, info) {
+      const {
+        input: { title, interval },
+      } = args;
+      const cycle = new Cycle({ title, interval });
+      return cycle.save();
+    },
   },
 };
 

@@ -24,6 +24,8 @@
   },
   "dependencies": {
     "apollo-server": "^2.2.6",
-    "graphql": "^14.0.2"
+    "dotenv": "^6.2.0",
+    "graphql": "^14.0.2",
+    "mongoose": "^5.3.15"
   }
 }
