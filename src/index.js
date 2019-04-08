@@ -1,15 +1,17 @@
-require('dotenv/config');
-const { ApolloServer } = require('apollo-server');
-const mongoose = require('mongoose');
-const schema = require('./schema');
+/* eslint-disable no-console */
+const express = require('express');
+const cors = require('cors');
 
-const DB_URL = process.env.DB_URL || 'mongodb://localhost/homehack';
+const envService = require('./services/env');
+const weather = require('./weather');
 
-mongoose.connect(DB_URL);
+const { PORT } = envService;
 
-const server = new ApolloServer({ schema });
+const app = express();
 
-server.listen().then(({ url }) => {
-  // eslint-disable-next-line
-  console.log(`🚀  Server ready at ${url}`);
+app.use(cors());
+app.use('/weather', weather);
+
+app.listen(PORT, () => {
+  console.log(`homehack-server listening ${PORT}...`);
 });
