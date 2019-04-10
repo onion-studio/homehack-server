@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const formatDate = require('date-fns/format');
+const _ = require('lodash');
 
 const envService = require('./services/env');
 
@@ -12,11 +13,11 @@ const serviceKey = envService.WEATHER_SERVICE_KEY;
 
 const locationX = envService.LOCATION_X;
 const locationY = envService.LOCATION_Y;
-const numOfRows = '100';
+const numOfRows = '5000';
 
 router.get('/', async (req, res) => {
   const date = formatDate(new Date(), 'YYYYMMDD');
-  const baseTime = '0500'; // TODO
+  const baseTime = formatDate(new Date(), 'HHmm');
   const params = new URLSearchParams();
   params.append('serviceKey', serviceKey);
   params.append('base_date', date);
@@ -29,7 +30,14 @@ router.get('/', async (req, res) => {
     params,
   });
   const { data } = weatherRes;
-  res.send(data);
+  const itemArr = data.response.body.items.item;
+  const result = _.chain(itemArr)
+    .map(item => _.omit(item, ['nx', 'ny']))
+    .map(item => ({ ...item, fcstTime: item.fcstTime.toString() }))
+    .groupBy(item => item.category)
+    .pick(['POP', 'TMN', 'TMX', 'SKY'])
+    .value();
+  res.send(result);
 });
 
 module.exports = router;
