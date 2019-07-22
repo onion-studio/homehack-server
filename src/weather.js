@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const formatDate = require('date-fns/format');
-var client = require('cheerio-httpcli');
+const client = require('cheerio-httpcli');
 
 const _ = require('lodash');
 
@@ -13,7 +13,8 @@ const urlForWeather =
   'http://newsky2.kma.go.kr/service/SecndSrtpdFrcstInfoService2/ForecastSpaceData';
 const serviceKey = envService.WEATHER_SERVICE_KEY;
 
-const urlForDust = 'https://search.naver.com/search.naver?sm=top_hty&fbm=0&ie=utf8&query=%EB%B4%89%EC%B2%9C%EB%8F%99+%EB%AF%B8%EC%84%B8%EB%A8%BC%EC%A7%80'
+const urlForDust =
+  'https://search.naver.com/search.naver?sm=top_hty&fbm=0&ie=utf8&query=%EB%B4%89%EC%B2%9C%EB%8F%99+%EB%AF%B8%EC%84%B8%EB%A8%BC%EC%A7%80';
 
 const locationX = envService.LOCATION_X;
 const locationY = envService.LOCATION_Y;
@@ -30,7 +31,6 @@ function lastBaseDate() {
 }
 
 router.get('/', async (req, res) => {
-  let dust;
   const params = new URLSearchParams();
   params.append('serviceKey', serviceKey);
   params.append('base_date', lastBaseDate());
@@ -43,11 +43,6 @@ router.get('/', async (req, res) => {
   const weatherRes = await axios(urlForWeather, {
     params,
   });
-  await client.fetch(urlForDust, {}, (err, $, res) => {
-    if(err) {console.log('error'); return;}
-      const text = $('.main_figure').text()
-      dust = text
-  })
   const { data } = weatherRes;
   const itemArr = data.response.body.items.item;
   const result = _.chain(itemArr)
@@ -55,9 +50,21 @@ router.get('/', async (req, res) => {
     .map(item => ({ ...item, fcstTime: item.fcstTime.toString() }))
     .groupBy(item => item.category)
     .pick(['POP', 'TMN', 'TMX', 'SKY'])
-    .value()
-    .push(dust)
+    .value();
   res.send(result);
+});
+
+router.get('/dust', (req, res) => {
+  let dust;
+  client.fetch(urlForDust, {}, (err, $, _res) => {
+    if (err) {
+      console.log('error');
+      return;
+    }
+    const text = $('.main_figure').text();
+    dust = text;
+    res.send(dust);
+  });
 });
 
 module.exports = router;
