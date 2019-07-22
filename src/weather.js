@@ -1,15 +1,20 @@
 const express = require('express');
 const axios = require('axios');
 const formatDate = require('date-fns/format');
+const client = require('cheerio-httpcli');
+
 const _ = require('lodash');
 
 const envService = require('./services/env');
 
 const router = express.Router();
 
-const url =
+const urlForWeather =
   'http://newsky2.kma.go.kr/service/SecndSrtpdFrcstInfoService2/ForecastSpaceData';
 const serviceKey = envService.WEATHER_SERVICE_KEY;
+
+const urlForDust =
+  'https://search.naver.com/search.naver?sm=top_hty&fbm=0&ie=utf8&query=%EB%B4%89%EC%B2%9C%EB%8F%99+%EB%AF%B8%EC%84%B8%EB%A8%BC%EC%A7%80';
 
 const locationX = envService.LOCATION_X;
 const locationY = envService.LOCATION_Y;
@@ -35,7 +40,7 @@ router.get('/', async (req, res) => {
   params.append('ny', locationY);
   params.append('numOfRows', numOfRows);
   params.append('_type', 'json');
-  const weatherRes = await axios(url, {
+  const weatherRes = await axios(urlForWeather, {
     params,
   });
   const { data } = weatherRes;
@@ -47,6 +52,19 @@ router.get('/', async (req, res) => {
     .pick(['POP', 'TMN', 'TMX', 'SKY'])
     .value();
   res.send(result);
+});
+
+router.get('/dust', (req, res) => {
+  let dust;
+  client.fetch(urlForDust, {}, (err, $, _res) => {
+    if (err) {
+      console.log('error');
+      return;
+    }
+    const text = $('.main_figure').text();
+    dust = text;
+    res.send(dust);
+  });
 });
 
 module.exports = router;
