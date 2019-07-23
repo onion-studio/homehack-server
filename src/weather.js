@@ -15,6 +15,8 @@ const serviceKey = envService.WEATHER_SERVICE_KEY;
 
 const urlForDust =
   'https://search.naver.com/search.naver?sm=top_hty&fbm=0&ie=utf8&query=%EB%B4%89%EC%B2%9C%EB%8F%99+%EB%AF%B8%EC%84%B8%EB%A8%BC%EC%A7%80';
+const urlForFineDust =
+  'https://search.naver.com/search.naver?sm=tab_hty.top&where=nexearch&query=%EB%B4%89%EC%B2%9C%EB%8F%99+%EC%B4%88%EB%AF%B8%EC%84%B8%EB%A8%BC%EC%A7%80&oquery=%EB%B4%89%EC%B2%9C%EB%8F%99+%EB%AF%B8%EC%84%B8%EB%A8%BC%EC%A7%80&tqi=UgkTbwp0J1sssn0iP70ssssstqV-301584';
 
 const locationX = envService.LOCATION_X;
 const locationY = envService.LOCATION_Y;
@@ -54,17 +56,18 @@ router.get('/', async (req, res) => {
   res.send(result);
 });
 
-router.get('/dust', (req, res) => {
-  let dust;
-  client.fetch(urlForDust, {}, (err, $, _res) => {
-    if (err) {
-      console.log('error');
-      return;
-    }
-    const text = $('.main_figure').text();
-    dust = text;
-    res.send(dust);
-  });
+router.get('/dust', async (req, res) => {
+  const result = {
+    dust: 0,
+    fineDust: 0,
+  };
+  const x = await client.fetch(urlForDust);
+  const y = await client.fetch(urlForFineDust);
+
+  result.dust = x.$('.main_figure').text();
+  result.fineDust = y.$('.main_figure').text();
+
+  res.send(result);
 });
 
 module.exports = router;
